@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 
+
 class Clientesbase(BaseModel) :
     nombre :str
     edad: int
