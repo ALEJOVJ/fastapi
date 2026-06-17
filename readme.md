@@ -50,3 +50,10 @@ se agrego listas_app
 se creo la base de datos funcional y se edito el enrutador clientes creando variables nuevas
 para que se generen en la base de datos 
 
+
+se agrega __pycache_/
+my_venv/
+venv/
+
+
+
