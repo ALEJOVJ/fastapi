@@ -47,4 +47,6 @@ aparecieron errores de nombres estaba poniendo APIrouter cuando era APIRouter er
 
 se agrego listas_app
 
-aparece un error que no me aparece el valor final al sumar el valor unitario
+se creo la base de datos funcional y se edito el enrutador clientes creando variables nuevas
+para que se generen en la base de datos 
+
