@@ -3,6 +3,7 @@ from sqlmodel import SQLModel, Field, Relationship
 
 
 
+
 class Clientesbase(SQLModel) :
     nombre :str = Field(default=None)
     edad: int = Field(default=None)
@@ -16,6 +17,11 @@ class ClientesEditar(Clientesbase):
 
 class Clientes(Clientesbase, table=True) :
     id : int | None = Field(default=None, primary_key=True)
+    #relacion virutal con factura
+    factura: list["Factura"] = Relationship(back_populates="cliente")
 
-class EliminarCliente() :
+class Clienteleer(Clientesbase):
+    id: int
+
+class EliminarCliente():
     pass

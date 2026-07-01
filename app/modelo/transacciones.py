@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -18,4 +17,11 @@ class TransaccionesEditar(TransaccionesBase):
 
 class Transacciones(TransaccionesBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    factura_id: int | None = Field(default=None, foreign_key="factura.id")
+
+    factura_id: int | None = Field(default=None,foreign_key="factura.id")
+
+    factura: "Factura" = Relationship(back_populates="transacciones")
+
+
+class Transaccionleer(TransaccionesBase):
+    id: int
