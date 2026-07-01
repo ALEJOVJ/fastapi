@@ -2,12 +2,18 @@ from fastapi import APIRouter
 from datetime import datetime
 from app.modelo.facturas import Factura, FacturaCrear, FacturaEditar
 from app.listas_app import lista_facturas, lista_clientes , lista_transacciones
+from app.conexion_bd import sesion_dependencia
+from sqlmodel import select
+from app.modelo.clientes import Clientes
 
 ruta_facturas = APIRouter()
 
 
 @ruta_facturas.get("/facturas", response_model=list[Factura])
-async def listar_facturas():
+async def listar_facturas(sesion: sesion_dependencia):
+    #select from * factura
+    consulta = select(Factura)
+    lista_facturas = sesion.exec(consulta).all()
     return lista_facturas
 
 
@@ -26,30 +32,27 @@ async def obtener_factura(id: int):
 @ruta_facturas.post("/facturas/{cliente_id}", response_model=Factura)
 async def crear_factura(
     cliente_id: int,
-    datos_factura: FacturaCrear
+    datos_factura: FacturaCrear,
+    sesion: sesion_dependencia
 ):
 
-    cliente_encontrado = None
 
-    for cliente in lista_clientes:
-        if cliente.id == cliente_id:
-            cliente_encontrado = cliente
-            break
+
+    cliente_encontrado = sesion.get(Clientes, cliente_id)
 
     if not cliente_encontrado:
         return {
             "mensaje": "Cliente no encontrado"
         }
 
-    factura_val = Factura.model_validate(
-        datos_factura.model_dump()
-    )
 
-    factura_val.id = len(lista_facturas) + 1
-    factura_val.fecha = str(datetime.now())
-    factura_val.cliente = cliente_encontrado
+    factura_dict = datos_factura.model_dump()
+    factura_dict["Cliente_id"] = cliente_id
+    factura_val = Factura.model_validate(factura_dict)
 
-    lista_facturas.append(factura_val)
+    sesion.add(factura_val)
+    sesion.commit()
+    sesion.refresh(factura_val)
 
     return factura_val
 

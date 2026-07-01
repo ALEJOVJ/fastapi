@@ -1,13 +1,18 @@
 from fastapi import APIRouter
 from app.modelo.transacciones import Transacciones, TransaccionesCrear, TransaccionesEditar
 from app.listas_app import lista_transacciones, lista_facturas, lista_clientes
+from app.modelo.facturas import Factura
+from app.conexion_bd import sesion_dependencia
+from sqlmodel import select
 
 ruta_transacciones = APIRouter()
 
 
 
 @ruta_transacciones.get("/transacciones", response_model=list[Transacciones])
-async def listar_transacciones():
+async def listar_transacciones(sesion: sesion_dependencia):
+    consulta = select(Transacciones)
+    lista_transacciones = sesion.exec(consulta).all()
     return lista_transacciones
 
 
@@ -27,50 +32,22 @@ async def obtener_transaccion(id: int):
 async def crear_transaccion(
     factura_id: int,
     cliente_id: int,
-    datos_transaccion: TransaccionesCrear
+    datos_transaccion: TransaccionesCrear,
+    sesion: sesion_dependencia
 ):
 
-    cliente_encontrado = None
+    factura_encontrada = sesion.get(Factura, factura_id)
 
-    for cliente in lista_clientes:
-        if cliente.id == cliente_id:
-            cliente_encontrado = cliente
-            break
+    transaccion_dict = datos_transaccion.model_dump()
+    transaccion_dict["factura_id"] = factura_id
 
-    if not cliente_encontrado:
-        return {
-            "mensaje": "Cliente no encontrado"
-        }
+   
 
-    factura_encontrada = None
+    transaccion_val = Transacciones.model_validate(transaccion_dict)
 
-    for factura in lista_facturas:
-        if factura.id == factura_id:
-            factura_encontrada = factura
-            break
-
-    if not factura_encontrada:
-        return {
-            "mensaje": "Factura no encontrada"
-        }
-
-    if factura_encontrada.cliente.id != cliente_id:
-        return {
-            "mensaje": "La factura pertenece a otro cliente"
-        }
-
-    transaccion_val = Transacciones.model_validate(
-        datos_transaccion.model_dump()
-    )
-
-    transaccion_val.id = len(lista_transacciones) + 1
-    transaccion_val.factura_id = factura_id
-
-    lista_transacciones.append(transaccion_val)
-
-    factura_encontrada.transacciones.append(
-        transaccion_val
-    )
+    sesion.add(transaccion_val)
+    sesion.commit()
+    sesion.refresh(transaccion_val)
 
     return {
         "mensaje": "Transacción creada",
